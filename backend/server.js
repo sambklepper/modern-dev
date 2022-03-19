@@ -17,6 +17,8 @@ app.get('/', (req, res) => {
   res.send('API running...')
 })
 
+app.use('/api/users', require('./routes/userRoutes'))
+
 app.use(errorHandler)
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`.magenta))
