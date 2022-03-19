@@ -41,6 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      isAdmin: user.isAdmin,
       token: generateToken(user._id),
     })
   } else {
@@ -62,6 +63,7 @@ const loginUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      isAdmin: user.isAdmin,
       token: generateToken(user._id),
     })
   } else {
@@ -70,16 +72,23 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 })
 
-//    @desc Get current user
-//    @route /api/users/me
+//    @desc Get user profile
+//    @route /api/users/profile
 //    @access Private
-const getMe = asyncHandler(async (req, res) => {
-  const user = {
-    id: req.user._id,
-    email: req.user.email,
-    name: req.user.name,
+const getUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+
+  if (user) {
+    res.json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+    })
+  } else {
+    res.status(404)
+    throw new Error('User not found')
   }
-  res.status(200).json(user)
 })
 
 // Generate token
@@ -92,5 +101,5 @@ const generateToken = (id) => {
 module.exports = {
   registerUser,
   loginUser,
-  getMe,
+  getUserProfile,
 }
