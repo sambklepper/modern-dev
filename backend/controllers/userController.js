@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/userModel')
 
 // @desc    Register a new user
-// @route   /api/users
+// @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, isAdmin } = req.body
@@ -51,7 +51,7 @@ const registerUser = asyncHandler(async (req, res) => {
 })
 
 //    @desc Login a user
-//    @route /api/users/login
+//    @route POST /api/users/login
 //    @access Public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body
@@ -73,7 +73,7 @@ const loginUser = asyncHandler(async (req, res) => {
 })
 
 //    @desc Get user profile
-//    @route /api/users/profile
+//    @route GET /api/users/profile
 //    @access Private
 const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
@@ -84,6 +84,37 @@ const getUserProfile = asyncHandler(async (req, res) => {
       email: user.email,
       name: user.name,
       isAdmin: user.isAdmin,
+    })
+  } else {
+    res.status(404)
+    throw new Error('User not found')
+  }
+})
+
+//    @desc Update user profile
+//    @route PUT /api/users/profile
+//    @access Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+
+  if (user) {
+    user.name = req.body.name || user.name
+    user.email = req.body.email || user.email
+    if (req.body.password) {
+      // Hash password
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(req.body.password, salt)
+      user.password = hashedPassword
+    }
+
+    const updatedUser = await user.save()
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+      token: generateToken(updatedUser._id),
     })
   } else {
     res.status(404)
@@ -102,4 +133,5 @@ module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
+  updateUserProfile,
 }
